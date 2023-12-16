@@ -1,2 +1,2 @@
 # PFS-NoZoom
-No-Zoom FOV for Pirate Fighting Simulator
+Disables FOV zoom when you ADS, toggle it with the comma key.
