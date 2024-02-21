@@ -8,8 +8,8 @@
 #define COL_GREEN "\x1B[32m"
 #define COL_DEF "\x1B[39m"
 
-#define LOC 0x2C75E50
-#define BYTES "\xF3\x0F\x11\x89\xB0\x02\x00\x00"
+#define LOC 0x20DC490
+#define BYTES "\xF3\x0F\x11\x89\xA0\x02\x00\x00"
 #define NOPS  "\x90\x90\x90\x90\x90\x90\x90\x90"
 #define NUMBYTES 8
 
