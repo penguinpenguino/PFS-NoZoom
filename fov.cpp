@@ -1,17 +1,17 @@
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <Psapi.h>
-#include <stdio.h>
 
 #define PROC_NAME "PirateFS-Win64-Shipping.exe"
-#define COL_RED "\x1B[31m"
-#define COL_GREEN "\x1B[32m"
-#define COL_DEF "\x1B[39m"
+#define HIT "\x1B[32m[+]\x1B[39m "
+#define MISS "\x1B[31m[-]\x1B[39m "
 
 #define LOC 0x20DC490
 #define BYTES "\xF3\x0F\x11\x89\xA0\x02\x00\x00"
 #define NOPS  "\x90\x90\x90\x90\x90\x90\x90\x90"
 #define NUMBYTES 8
+
+#define print(str) WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), str, strlen(str), NULL, NULL)
 
 bool GetPIDByName();
 bool GetProcBase();
@@ -32,37 +32,37 @@ int main() {
 
 	// Find process
 	if (!GetPIDByName()) {
-		printf("%s[-]%s Couldn\'t find PFS\n", COL_RED, COL_DEF);
+		print(MISS "Couldn\'t find PFS\n");
 		goto end;
 	}
-	printf("%s[+]%s Found PFS\n", COL_GREEN, COL_DEF);
+	print(HIT "Found PFS\n");
 
 	// Open it
 	proc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (!proc) {
-		printf("%s[-]%s Couldn\'t open PFS (0x%x)\n", COL_RED, COL_DEF, GetLastError());
+		print(MISS "Couldn\'t open PFS\n");
 		goto end;
 	}
-	printf("%s[+]%s Opened PFS\n", COL_GREEN, COL_DEF);
+	print(HIT "Opened PFS\n");
 
 	// Find image base
 	if (!GetProcBase()) {
-		printf("%s[-]%s Couldn\'t get image base\n", COL_RED, COL_DEF);
+		print(MISS "Couldn\'t get image base\n");
 		goto end;
 	}
-	printf("%s[+]%s Image base: %llx\n", COL_GREEN, COL_DEF, base);
+	print(HIT "Got image base\n");
 	
 	// Verify bytes
 	bytes = reinterpret_cast<BYTE*>(malloc(NUMBYTES));
 	tbytes = reinterpret_cast<BYTE*>(malloc(NUMBYTES));
 	memcpy(tbytes, BYTES, NUMBYTES);
 	if (!ReadProcessMemory(proc, base + LOC, bytes, NUMBYTES, NULL)) {
-		printf("%s[-]%s Couldn\'t read memory\n", COL_RED, COL_DEF);
+		print(MISS "Couldn\'t read memory\n");
 		goto end;
 	}
 	for (int i = 0; i < NUMBYTES; i++) {
 		if (bytes[i] != tbytes[i]) {
-			printf("%s[-]%s Sig is invalid, game probably updated. DM GoodUsername240 on Discord and I\'ll update it.\n", COL_RED, COL_DEF);
+			print(MISS "Sig is invalid, game probably updated. DM GoodUsername240 on Discord and I\'ll update it.\n");
 			free(bytes);
 			goto end;
 		}
@@ -101,10 +101,10 @@ DWORD WINAPI Listen(void* args) {
 void toggle(bool enabled) {
 	if (enabled) {
 		if (WriteProcessMemory(proc, base + LOC, NOPS, NUMBYTES, NULL))
-			printf("\x1B[2J\x1B[0;0f\x1B[?25l%s[+]%s Enabled (, to toggle)", COL_GREEN, COL_DEF);
+			print("\x1B[2J\x1B[0;0f\x1B[?25l" HIT "Enabled (, to toggle)");
 	} else {
 		if (WriteProcessMemory(proc, base + LOC, BYTES, NUMBYTES, NULL))
-			printf("\x1B[2J\x1B[0;0f\x1B[?25l%s[-]%s Disabled (, to toggle)", COL_RED, COL_DEF);
+			print("\x1B[2J\x1B[0;0f\x1B[?25l" MISS "Disabled (, to toggle)");
 	}
 }
 
